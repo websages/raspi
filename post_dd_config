@@ -1,0 +1,89 @@
+#!/bin/bash
+echo PATH="/usr/local/bin:/usr/bin:/bin"
+
+mount | grep mmcblk0p2 || mount /dev/mmcblk0p2 /media/ || exit 1
+mount | grep mmcblk0p1 || mount /dev/mmcblk0p1 /media/boot/ || exit 1
+
+if [ ! -f /media/boot/config.txt.dist ]; then
+  cp /media/boot/config.txt /media/boot/config.txt.dist
+fi
+cat<<EOF > /media/boot/config.txt
+# uncomment if you get no picture on HDMI for a default "safe" mode
+# hdmi_safe=1
+
+hdmi_drive=2
+
+# Acer X193W 1440 x 900 at 75.0 Hz (hdmi_mode=48)
+# but only 60Hz seems to work (hdmi_mode=47)
+# hdmi_group=2
+# hdmi_mode=47
+
+# # Big TV
+# hdmi_group=1
+# hdmi_mode=16
+
+# # Dell IN1910Nf 1366x768
+# hdmi_group=2
+# hdmi_mode=81
+# disable_overscan=1
+
+start_x=1
+gpu_mem=128
+arm_freq=900
+core_freq=250
+sdram_freq=450
+over_voltage=2
+EOF
+
+cat<<EOF > /media/boot/wpa_supplicant.conf
+ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+update_config=1
+
+network={
+        ssid="GitHub"
+        #psk="OctocatsRule!"
+        psk=79f529240a2ec5222e11a1e2d077c2c9c8b1257cc06024b58fd9a0e74c713e1e
+}
+EOF
+
+cat<<EOF > /media/etc/network/interfaces
+auto lo wlan0
+
+iface lo inet loopback
+
+iface eth0 inet dhcp
+
+allow-hotplug wlan0
+iface wlan0 inet dhcp
+pre-up wpa_supplicant -Dwext -i wlan0 -c /boot/wpa_supplicant.conf -B
+post-down killall -q wpa_supplicant
+EOF
+
+
+if [ ! -d /media/root/.ssh ]; then
+   mkdir -p /media/root/.ssh
+fi
+cat<<EOF > /media/root/.ssh/authorized_keys
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDt1d4yn+Ka1a5BrnwJ8QI0SiuxLSyH2RfctoPGWZzlxElm0L22DnEj3spMpR8m4K6ErUFz8ICRHyJ+0bj3KqeFUfVc1EVZbaY6B9/QdaSSm9KZM5Pew+SMoH4lvAV0BSX5DcHwln83rjKP5/fTnNw28OwvJ5MCd0GS2y/7mTXsWdH+dARYF6gmQQfwJ+cVnjNUxJlQtZY6I0XniDy7ZYrWLecYx409NlQBdI5ZLtFW4SLbDKarHVg4wf82qjc9xvErMLRLrgQ6LIkdCK8HQq506C26fEF2PHEkgMboelNwi8aagGx4Ce0zFq3xO45pxQqR/9J+RVI1anZX0tIm20ul jameswhite@Jamess-MacBook-Pro.local
+EOF
+chown -R root:root /media/root/.ssh
+chmod -R 750 /media/root/.ssh
+
+if [ ! -d /media/home/pi/.ssh ]; then
+   mkdir -p /media/home/pi/.ssh
+fi
+cat<<EOF > /media/home/pi/.ssh/authorized_keys
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDt1d4yn+Ka1a5BrnwJ8QI0SiuxLSyH2RfctoPGWZzlxElm0L22DnEj3spMpR8m4K6ErUFz8ICRHyJ+0bj3KqeFUfVc1EVZbaY6B9/QdaSSm9KZM5Pew+SMoH4lvAV0BSX5DcHwln83rjKP5/fTnNw28OwvJ5MCd0GS2y/7mTXsWdH+dARYF6gmQQfwJ+cVnjNUxJlQtZY6I0XniDy7ZYrWLecYx409NlQBdI5ZLtFW4SLbDKarHVg4wf82qjc9xvErMLRLrgQ6LIkdCK8HQq506C26fEF2PHEkgMboelNwi8aagGx4Ce0zFq3xO45pxQqR/9J+RVI1anZX0tIm20ul jameswhite@Jamess-MacBook-Pro.local
+EOF
+chown -R 1000:1000 /media/home/pi/.ssh
+chmod -R 750 /media/home/pi/.ssh
+
+grep "^1:2345:respawn:/bin/login" /media/etc/inittab && sed -ie 's/\(^1:2345:respawn:\/bin\/login\)/#&/' /media/etc/inittab
+grep "^#1:2345:respawn:\/sbin\/getty" /media/etc/inittab && sed -ie 's/^#\(1:2345:respawn:\/sbin\/getty\)/\1/' /media/etc/inittab
+
+sed -i -e 's/xserver-allow-tcp=false/xserver-allow-tcp=true/' /media/etc/lightdm/lightdm.conf
+sleep 2
+
+mount | grep mmcblk0p1 &&  umount /media/boot/
+mount | grep mmcblk0p2 &&  umount /media/
+
