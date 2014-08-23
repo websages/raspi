@@ -5,6 +5,7 @@ sudo apt-get install -y libjpeg62 libjpeg62-dev libavformat53 libavformat-dev li
 sudo install -m 0755 $(dirname $0)/motion /usr/local/bin/motion
 sudo install -m 0755 $(dirname $0)/motion.conf /etc/motion.conf
 sudo mkdir -p /var/tmp/motion
+sudo chown pi:pi /var/tmp/motion
 
 if [ ! -f /etc/rc.local.pre-motion ]; then
   sudo cp /etc/rc.local /etc/rc.local.pre-motion
