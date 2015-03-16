@@ -27,6 +27,11 @@ hdmi_drive=2
 # hdmi_mode=81
 # disable_overscan=1
 
+# ACER S240ML
+hdmi_group=2
+hdmi_mode=82
+disable_overscan=1
+
 start_x=1
 gpu_mem=128
 arm_freq=900
