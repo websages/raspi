@@ -1,23 +1,25 @@
 #!/bin/bash
-echo PATH="/usr/local/bin:/usr/bin:/bin"
+export PATH="/usr/local/bin:/usr/bin:/bin"
+IP="10.255.0.232"
 
-# Don't run if pink hasn't seen the SD card recently
-ssh root@pink "dmesg  | tail -5" | grep mmcblk0 || exit 1
+# Don't run if $IP hasn't seen the SD card recently
+ssh root@${IP} "dmesg  | tail -5" | grep sda || exit 1
 
 DDLOG=$(mktemp /tmp/ddlog.XXXX)
-(cat ~/lib/images/2014-06-20-wheezy-raspbian.img | ssh root@pink 'cat - | dd of=/dev/mmcblk0') > ${DDLOG} 2>&1 &
+(cat ~/lib/images/2015-02-16-raspbian-wheezy.img | ssh root@${IP} 'cat - | dd of=/dev/sda') > ${DDLOG} 2>&1 &
 SLEEP=3; SAME_COUNT=0; LAST=0
 while [ ${SAME_COUNT} -lt 5 ]; do
-  ssh root@pink 'pkill -USR1 dd'; tail -1 ${DDLOG}; sleep ${SLEEP};
-  CURRENT=$(ssh root@pink 'pkill -USR1 dd'; tail -1 ${DDLOG}| awk '{print $1}')
+  ssh root@${IP} 'pkill -USR1 dd'; tail -1 ${DDLOG}; sleep ${SLEEP};
+  CURRENT=$(ssh root@${IP} 'pkill -USR1 dd'; tail -1 ${DDLOG}| awk '{print $1}')
   if [ ${CURRENT} -eq $LAST ]; then
     SAME_COUNT=`expr ${SAME_COUNT} + 1`
   fi
   LAST=${CURRENT}
 done
 /bin/rm ${DDLOG}
+[ ! -z $( which say ) ] && say "Please re-seat the SD card and hit enter"
 echo -n "re-seat the sd-card and hit enter: "
 read trash
-scp $(dirname $0)/post_dd_config root@pink:/usr/local/sbin
-ssh root@pink chmod 750 /usr/local/sbin/post_dd_config
-ssh root@pink /usr/local/sbin/post_dd_config
+scp $(dirname $0)/post_dd_config root@${IP}:/usr/local/sbin
+ssh root@${IP} chmod 750 /usr/local/sbin/post_dd_config
+ssh root@${IP} /usr/local/sbin/post_dd_config
