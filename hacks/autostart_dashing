@@ -1,0 +1,9 @@
+cat<<EOF > /etc/xdg/lxsession/LXDE/autostart
+@lxpanel --profile LXDE
+@pcmanfm --desktop --profile LXDE
+@xset s off
+@xset s noblank
+@xset -dpms
+@xhost +
+@/home/pi/bin/dashing-keepalive
+EOF
