@@ -1,0 +1,15 @@
+#!/bin/bash
+sudo apt-get update
+sudo apt-get install -y libjpeg62 libjpeg62-dev libavformat53 libavformat-dev libavcodec53 libavcodec-dev libavutil51 libavutil-dev libc6-dev zlib1g-dev libmysqlclient18 libmysqlclient-dev libpq5 libpq-dev
+
+sudo install -m 0755 $(dirname $0)/motion /usr/local/bin/motion
+sudo install -m 0755 $(dirname $0)/motion.conf /etc/motion.conf
+sudo mkdir -p /var/tmp/motion
+sudo chown pi:pi /var/tmp/motion
+
+if [ ! -f /etc/rc.local.pre-motion ]; then
+  sudo cp /etc/rc.local /etc/rc.local.pre-motion
+  grep "motion.conf" /etc/rc.local || \
+    awk '{ if($0 == "exit 0"){print "/usr/bin/nohup /bin/su - pi -c \"/usr/local/bin/motion -c /etc/motion.conf\" &"; }; print $0;}' /etc/rc.local.pre-motion | sudo tee /etc/rc.local
+  sudo chmod 755 /etc/rc.local
+fi
