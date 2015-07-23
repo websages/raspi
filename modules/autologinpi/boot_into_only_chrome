@@ -1,0 +1,13 @@
+# apt-get install -y unclutter
+
+cat<<EOF > ~/.bash_profile
+if [ -z "$DISPLAY" ] && [ $(tty) == /dev/tty1 ]; then
+    /usr/bin/setterm -blank 0 -powerdown off
+    /usr/bin/startx
+    logout
+fi
+
+cat<< EOF > /home/pi/.xinitrc
+/usr/bin/unclutter &
+/usr/bin/chromium --window-size=1824,984 --incognito --kiosk "http://planck:3030/$file"
+EOF
