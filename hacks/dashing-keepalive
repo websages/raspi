@@ -1,0 +1,7 @@
+#!/bin/bash
+export DISPLAY=:0
+file=$(/usr/bin/xwininfo -root | /bin/grep -- -geometry | /usr/bin/awk '{print $NF}')
+while [ 1 ]; do
+  /usr/bin/chromium --incognito --kiosk "http://planck:3030/$file"
+  /bin/sleep 5
+done
