@@ -1,7 +1,11 @@
 #!/bin/bash
+if [ -z "${DASHING_SERVER}" ]; then
+  echo "No DASHING_SERVER in env."
+  exit 1
+fi
 export DISPLAY=:0
 file=$(/usr/bin/xwininfo -root | /bin/grep -- -geometry | /usr/bin/awk '{print $NF}')
 while [ 1 ]; do
-  /usr/bin/chromium --incognito --kiosk "http://planck:3030/$file"
+  /usr/bin/chromium --incognito --kiosk "http://${DASHING_SERVER}:3030/$file"
   /bin/sleep 5
 done
