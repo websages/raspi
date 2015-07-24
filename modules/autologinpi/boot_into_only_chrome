@@ -1,0 +1,18 @@
+if [ "$(dpkg -l | grep unclutter | awk '{print $1}')" != "ii" ]; then apt-get install -y unclutter; fi
+
+cat<<EOF > ~/.bash_profile
+if [ -z "$DISPLAY" ] && [ $(tty) == /dev/tty1 ]; then
+    /usr/bin/setterm -blank 0 -powerdown off
+    /usr/bin/startx
+    logout
+fi
+
+cat<< EOF > /home/pi/.xinitrc
+[ -z "${DASHING_URL}" ] && export DASHING_URL="http://planck:3030/1824x984+0+0"
+[ -z "${GEOMETRY}" ]    && export GEOMETRY="1824,984"
+
+/usr/bin/unclutter &
+/usr/bin/chromium --window-size=$GEOMETRY --incognito --kiosk "$DASHING_URL"
+EOF
+
+Restart with sudo kill -9 $(ps -ef  | grep "/usr/bin/[Xx]" | awk '{print $2}')
