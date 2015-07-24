@@ -8,6 +8,11 @@ if [ -z "$DISPLAY" ] && [ $(tty) == /dev/tty1 ]; then
 fi
 
 cat<< EOF > /home/pi/.xinitrc
+[ -z "${DASHING_URL}" ] && export DASHING_URL="http://planck:3030/1824x984+0+0"
+[ -z "${GEOMETRY}" ]    && export GEOMETRY="1824,984"
+
 /usr/bin/unclutter &
-/usr/bin/chromium --window-size=1824,984 --incognito --kiosk "http://planck:3030/$file"
+/usr/bin/chromium --window-size=$GEOMETRY --incognito --kiosk "$DASHING_URL"
 EOF
+
+Restart with sudo kill -9 $(ps -ef  | grep "/usr/bin/[Xx]" | awk '{print $2}')
