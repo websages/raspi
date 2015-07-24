@@ -1,0 +1,4 @@
+#!/bin/bash
+echo "Updating configuration ..."
+sudo sed 's/XKBLAYOUT="gb"/XKBLAYOUT="us"/' /etc/default/keyboard
+echo "Keyboard changed to US. Restart to take effect."
