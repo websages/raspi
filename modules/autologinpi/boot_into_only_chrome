@@ -1,4 +1,4 @@
-# apt-get install -y unclutter
+if [ "$(dpkg -l | grep unclutter | awk '{print $1}')" != "ii" ]; then apt-get install -y unclutter; fi
 
 cat<<EOF > ~/.bash_profile
 if [ -z "$DISPLAY" ] && [ $(tty) == /dev/tty1 ]; then
