@@ -52,7 +52,7 @@ check_dependencies () {
 }
 
 set_ip_address () {
-  user "Enter the IP Address [0.0.0.0]"
+  user "Enter the IP Address [0.0.0.0]:"
   read -e ip_address
   if [ "$ip_address" == "" ]
   then
@@ -69,18 +69,66 @@ set_ip_address () {
 
 connect_and_copy_keys () {
   info 'Copying SSH public key to host'
-  ssh-copy-id $pi_username@$ip_address 
-  expect "password:"
-  send "$pi_password\n"
-  expect eof
-  success 'Key copied to remote host!'
+  ssh-copy-id -i $identity_file -o StrictHostKeyChecking=no $pi_username@$ip_address
 
   info 'Attempting remote login without password.'
-  if [ exec ssh -o BatchMode=yes $pi_username@$ip_address true ]
+  if [ exec ssh -i identity_file -o BatchMode=yes $pi_username@$ip_address true ]
   then
     success 'Authenticated using a public key!'
   else
     fail 'Did not login to remote host successfully with public key.'
+  fi
+}
+
+configure_wireless () {
+  user "Configure the wireless adapter? (leave blank to skip)"
+  read -e configure_wireless
+  if [ "$configure_wireless" != "" ]
+  then
+    user "Enter the Wireless SSID []:"
+    read -e wireless_ssid
+    user "Enter the Wireless Passphrase []:"
+    read -e wireless_passphrase
+    success "Wireless configuration saved!"
+  else
+    success "Skipping wireless configuration."
+  fi
+}
+
+configure_display () {
+  user "Configure the display? (leave blank to skip)"
+  read -e configure_display
+  if [ "$configure_display" != "" ]
+  then
+    echo ''
+    echo 'Consult the URL below to select setting values:'
+    echo 'https://www.raspberrypi.org/documentation/configuration/config-txt.md'
+    echo ''
+    user "Enter 'hdmi_mode' [2]:"
+    read -e hdmi_mode
+    if [ "$hdmi_mode" == '' ]
+    then
+      hdmi_mode=2
+    fi
+    user "Enter 'hdmi_group' [16]:"
+    read -e hdmi_group
+    if [ "$hdmi_group" == '' ]
+    then
+      hdmi_group=16
+    fi
+    user "Enter 'disable_overscan' [1]:"
+    read -e disable_overscan
+    if [ "$disable_overscan" == '' ]
+    then
+      disable_overscan=1
+    fi
+
+    success "Display configuration saved!"
+  else
+    hdmi_group=2
+    hdmi_mode=16
+    disable_overscan=1
+    success "Skipping display configuration."
   fi
 }
 
@@ -112,9 +160,9 @@ else
 
   connect_and_copy_keys
 
-  # configure_wireless
+  configure_wireless
 
-  # configure_display
+  configure_display
 
   # configure_keyboard
 
