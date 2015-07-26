@@ -1,0 +1,137 @@
+#!/usr/bin/env bash
+#
+# Makes a Delicious RaspberryPi
+
+set -e
+
+echo ''
+
+info () {
+  printf "  [ \033[00;34m..\033[0m ] $1\n"
+}
+
+user () {
+  printf "\r  [ \033[0;33m?\033[0m ] $1 "
+}
+
+success () {
+  printf "\r\033[2K  [ \033[00;32mOK\033[0m ] $1\n"
+}
+
+fail () {
+  printf "\r\033[2K  [\033[0;31mFAIL\033[0m] $1\n"
+  echo ''
+  exit
+}
+
+load_base_configuration () {
+  if ! [ -f config.cfg ]
+  then
+    fail "Copy config.cfg-dist to config.cfg before running."
+  else
+    info "Parsing CFG file to set configuration options."
+    echo ''
+    source config.cfg
+    if [[ "$pi_username" != "" && "$pi_password" != "" &&  "$identity_file" != "" ]]
+    then
+      success "Default Username: $pi_username"
+      success "Default Password: *****"
+      success "SSH Identity File: $identity_file"
+    else
+      fail "Could not parse environment variables."
+      fail "Please check them and try again."
+    fi
+  fi
+}
+
+check_dependencies () {
+  if [ "$(which ssh-copy-id)" == "" ]
+  then
+    fail 'This script requires ssh-copy-id to be installed.'
+  fi
+}
+
+set_ip_address () {
+  user "Enter the IP Address [0.0.0.0]"
+  read -e ip_address
+  if [ "$ip_address" == "" ]
+  then
+    set_ip_address
+  fi
+
+  if ping -c 1 "$ip_address" &> /dev/null
+  then
+    info "Found host!"
+  else
+    fail "Host unreachable. Check your connection and try again."
+  fi
+}
+
+connect_and_copy_keys () {
+  info 'Copying SSH public key to host'
+  ssh-copy-id $pi_username@$ip_address 
+  expect "password:"
+  send "$pi_password\n"
+  expect eof
+  success 'Key copied to remote host!'
+
+  info 'Attempting remote login without password.'
+  if [ exec ssh -o BatchMode=yes $pi_username@$ip_address true ]
+  then
+    success 'Authenticated using a public key!'
+  else
+    fail 'Did not login to remote host successfully with public key.'
+  fi
+}
+
+##
+# Begin User Interaction
+##
+
+load_base_configuration
+
+check_dependencies
+
+echo '--------------------'
+echo ' Welcome to MkRasPi'
+echo '--------------------'
+echo ''
+echo 'This program will guide you through creating configurations for a remotely deployed Raspberry Pi.'
+echo ''
+
+if [ "$1" != "" ]
+then
+  config_file=$1
+
+  info "Running previous configuration: $config_file"
+
+  # run_configuration $config_file
+
+else
+  set_ip_address
+
+  connect_and_copy_keys
+
+  # configure_wireless
+
+  # configure_display
+
+  # configure_keyboard
+
+  # configure_camera
+
+  # write_configuration
+
+  # run_configuration $config_file
+fi
+
+echo ''
+echo 'Your Raspberry Pi is now configured. To re-run this configuration, use:'
+echo ''
+echo "  mkraspi $config_file"
+echo ''
+echo ''
+echo 'Thank you for using MkRasPi!'
+echo ''
+
+exit 0

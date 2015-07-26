@@ -1,0 +1,3 @@
+pi_username="pi"
+pi_password="raspberry"
+identity_file="~/.ssh/id_rsa.pub"
