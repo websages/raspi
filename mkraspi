@@ -85,12 +85,14 @@ configure_wireless () {
   read -e configure_wireless
   if [ "$configure_wireless" != "" ]
   then
+    configure_wireless=1
     user "Enter the Wireless SSID []:"
     read -e wireless_ssid
     user "Enter the Wireless Passphrase []:"
     read -e wireless_passphrase
     success "Wireless configuration saved!"
   else
+    configure_wireless=0
     success "Skipping wireless configuration."
   fi
 }
@@ -132,6 +134,83 @@ configure_display () {
   fi
 }
 
+configure_keyboard () {
+  user 'Switch keyboard to US? (leave blank to skip)'
+  read -e configure_us_keyboard
+  if [ "$configure_us_keyboard" == '' ]
+  then
+    configure_us_keyboard=1
+  else
+    configure_us_keyboard=0
+  fi
+}
+
+configure_camera () {
+  user 'Configure Raspberry Pi camera? (leave blank to skip)'
+  read -e install_motion
+  if [ "$configure_us_keyboard" == '' ]
+  then
+    install_motion=1
+  else
+    install_motion=0
+  fi
+}
+
+configure_kiosk () {
+  user 'Configure Kiosk mode? (leave blank to skip)'
+  read -e install_motion
+  if [ "$install_kiosk" == '' ]
+  then
+    install_kiosk=1
+    user "Enter the URL for the kisok start page, including http://"
+    read -e kiosk_url
+  else
+    install_kiosk=0
+  fi
+}
+
+write_configuration () {
+  info "Configuration questions complete!"
+  user "What do you want to name this configuration?"
+  read -e configuration_name
+  if [ "$configuration_name" != "" ]
+  then
+    if [ -f "configuration/$configuration_file" ]
+      info "That file already exists. Please give it a different name."
+      write_configuration
+    fi
+
+cat <<EOF> "configuration/$configuration_file.cfg"
+ip_address="$ip_address"
+configure_display=$configure_display
+hdmi_group=$hdmi_group
+hdmi_mode=$hdmi_mode
+disable_overscan=$disable_overscan
+configure_wireless=1
+wireless_ssid="$wireless_ssid"
+wireless_passphrase="$wireless_passphrase"
+configure_us_keyboard=$configure_us_keyboard
+install_motion=$install_motion
+install_kiosk=$install_kiosk
+kiosk_url="$kiosk_url"
+EOF
+
+  else
+    write_configuration
+  fi
+
+}
+
+run_configuration () {
+  if [ -f "configuration/$1" ]
+  then
+    source "$1.cfg"
+    fail '@todo'
+  else
+    fail "Could not load 'configuration/$1.cfg'. Please check and try again."
+  fi
+}
+
 ##
 # Begin User Interaction
 ##
@@ -150,36 +229,28 @@ echo ''
 if [ "$1" != "" ]
 then
   config_file=$1
-
   info "Running previous configuration: $config_file"
-
-  # run_configuration $config_file
-
+  run_configuration $config_file
+  echo ''
+  echo 'Your Raspberry Pi is now configured. To re-run this configuration, use:'
+  echo ''
+  echo "  mkraspi $config_file"
 else
   set_ip_address
-
   connect_and_copy_keys
-
   configure_wireless
-
   configure_display
-
-  # configure_keyboard
-
-  # configure_camera
-
-  # write_configuration
-
-  # run_configuration $config_file
+  configure_keyboard
+  configure_camera
+  configure_kiosk
+  write_configuration
+  echo ''
+  echo 'Your Raspberry Pi is now ready to be remotely configured. Run:'
+  echo ''
+  echo "  mkraspi $config_file"
+  echo ''
 fi
-
-echo ''
-echo 'Your Raspberry Pi is now configured. To re-run this configuration, use:'
-echo ''
-echo "  mkraspi $config_file"
-echo ''
 echo ''
 echo 'Thank you for using MkRasPi!'
 echo ''
-
 exit 0

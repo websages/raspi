@@ -5,9 +5,11 @@ These `*.cfg` files represent hosts that can be re-run quickly on the command li
 `officepi.cfg`
 
 ```
-hostname="officepi"
 ip_address="10.1.1.50"
-display_configuration_id="2"
+configure_display=1
+hdmi_group=2
+hdmi_mode=16
+disable_overscan=1
 configure_wireless=1
 wireless_ssid="netgear"
 wireless_passphrase="givemeinternet"

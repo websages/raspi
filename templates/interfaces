@@ -1,0 +1,10 @@
+auto lo wlan0
+
+iface lo inet loopback
+
+iface eth0 inet dhcp
+
+allow-hotplug wlan0
+iface wlan0 inet dhcp
+pre-up wpa_supplicant -Dwext -i wlan0 -c /boot/wpa_supplicant.conf -B
+post-down killall -q wpa_supplicant
