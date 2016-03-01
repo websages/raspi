@@ -1,0 +1,48 @@
+#!/bin/bash
+
+#
+# Image an SD card for use in a raspberry pi
+#
+# Usage: osx-image-raspi /dev/disk###
+#
+
+SD_CARD_DEVICE=$1
+IMAGE_HOST="einstein.hq.thebikeshed.io"
+IMAGE_USER="opt"
+IMAGE_VERSION="raspbian-jessie-latest.img"
+
+if [ -z "$1" ]
+then
+  echo "No SD card device supplied."
+  echo "Usage: $0 /dev/disk###"
+  echo
+  echo "diskutil list output:"
+  echo
+  /usr/sbin/diskutil list
+  exit 1
+fi
+
+TMPDIR=`/usr/bin/mktemp -d /tmp/raspbian-XXXXXX`
+
+function cleanup {
+  # clean up temp space
+  echo "Cleaning up temporary space in ${TMPDIR}..."
+  /usr/bin/time /bin/rm -rf ${TMPDIR}
+}
+trap cleanup EXIT
+
+# fetch raspi image
+echo "Fetching raspbian image [${IMAGE_VERSION}] from ${IMAGE_USER}@${IMAGE_HOST} into ${TMPDIR}..."
+/usr/bin/time /usr/bin/scp ${IMAGE_USER}@${IMAGE_HOST}:/opt/images/raspbian/${IMAGE_VERSION} ${TMPDIR}/
+
+# write raspbian image to SD card
+echo "Writing raspbian image to SD card..."
+
+echo "  unmounting any device at #{SD_CARD_DEVICE} (requires sudo access)..."
+/usr/bin/sudo /usr/bin/time /usr/sbin/diskutil unmountDisk ${SD_CARD_DEVICE}
+
+echo "  copying ${TMPDIR}/${IMAGE_VERSION} to ${SD_CARD_DEVICE} (requires sudo access)...\n    (press ctrl+t for progress report)"
+/usr/bin/sudo /usr/bin/time /bin/dd bs=1m if=${TMPDIR}/${IMAGE_VERSION} of=${SD_CARD_DEVICE}
+
+echo "  ejecting ${SD_CARD_DEVICE} (requires sudo access)..."
+/usr/bin/sudo /usr/bin/time /usr/sbin/diskutil eject ${SD_CARD_DEVICE}
