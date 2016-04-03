@@ -43,7 +43,7 @@ echo "  unmounting any device at #{SD_CARD_DEVICE} (requires sudo access)..."
 /usr/bin/sudo /usr/bin/time /usr/sbin/diskutil unmountDisk ${SD_CARD_DEVICE}
 
 echo "  copying ${TMPDIR}/${IMAGE_VERSION} to ${SD_CARD_DEVICE} (requires sudo access)...\n    (press ctrl+t for progress report)"
-/usr/bin/sudo /usr/bin/time /bin/dd bs=1m if=${TMPDIR}/${IMAGE_VERSION} of=${SD_CARD_DEVICE}
+/usr/bin/sudo /usr/bin/time /bin/dd bs=16m if=${TMPDIR}/${IMAGE_VERSION} of=${SD_CARD_DEVICE}
 
 echo "  ejecting ${SD_CARD_DEVICE} (requires sudo access)..."
 /usr/bin/sudo /usr/bin/time /usr/sbin/diskutil eject ${SD_CARD_DEVICE}
