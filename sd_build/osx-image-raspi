@@ -6,11 +6,6 @@
 # Usage: osx-image-raspi /dev/disk###
 #
 
-SD_CARD_DEVICE=$1
-IMAGE_HOST="einstein.hq.thebikeshed.io"
-IMAGE_USER="opt"
-IMAGE_VERSION="raspbian-jessie-latest.img"
-
 if [ -z "$1" ]
 then
   echo "No SD card device supplied."
@@ -21,6 +16,12 @@ then
   /usr/sbin/diskutil list
   exit 1
 fi
+
+SD_CARD_DEVICE=$1
+
+IMAGE_HOST=${IMAGE_HOST:-"einstein.hq.thebikeshed.io"}
+IMAGE_USER=${IMAGE_USER:-"opt"}
+IMAGE_VERSION=${IMAGE_VERSION:-"raspbian-jessie-latest.img"}
 
 TMPDIR=`/usr/bin/mktemp -d /tmp/raspbian-XXXXXX`
 
@@ -35,6 +36,13 @@ trap cleanup EXIT
 echo "Fetching raspbian image [${IMAGE_VERSION}] from ${IMAGE_USER}@${IMAGE_HOST} into ${TMPDIR}..."
 /usr/bin/time /usr/bin/scp ${IMAGE_USER}@${IMAGE_HOST}:/opt/images/raspbian/${IMAGE_VERSION} ${TMPDIR}/
 
+if [ ${IMAGE_VERSION: -3} == ".gz" ]
+then
+  CAT_COMMAND="/usr/bin/gunzip --stdout"
+else
+  CAT_COMMAND="/bin/cat"
+fi
+
 # write raspbian image to SD card
 echo "Writing raspbian image to SD card..."
 
@@ -42,7 +50,7 @@ echo "  unmounting any device at #{SD_CARD_DEVICE} (requires sudo access)..."
 /usr/bin/sudo /usr/bin/time /usr/sbin/diskutil unmountDisk ${SD_CARD_DEVICE}
 
 echo "  copying ${TMPDIR}/${IMAGE_VERSION} to ${SD_CARD_DEVICE} (requires sudo access)...\n    (press ctrl+t for progress report)"
-/usr/bin/sudo /usr/bin/time /bin/dd bs=1m if=${TMPDIR}/${IMAGE_VERSION} of=${SD_CARD_DEVICE}
+/usr/bin/sudo /usr/bin/time ${CAT_COMMAND} ${TMPDIR}/${IMAGE_VERSION} | /bin/dd bs=16m of=${SD_CARD_DEVICE}
 
 echo "  ejecting ${SD_CARD_DEVICE} (requires sudo access)..."
 /usr/bin/sudo /usr/bin/time /usr/sbin/diskutil eject ${SD_CARD_DEVICE}
