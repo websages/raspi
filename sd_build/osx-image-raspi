@@ -9,7 +9,8 @@
 SD_CARD_DEVICE=$1
 IMAGE_HOST="einstein.hq.thebikeshed.io"
 IMAGE_USER="opt"
-IMAGE_VERSION="raspbian-jessie-latest.img"
+IMAGE_VERSION="2015-02-16-raspbian-wheezy.img"
+
 
 if [ -z "$1" ]
 then
