@@ -46,7 +46,7 @@ fi
 # write raspbian image to SD card
 echo "Writing raspbian image to SD card..."
 
-echo "  unmounting any device at #{SD_CARD_DEVICE} (requires sudo access)..."
+echo "  unmounting any device at ${SD_CARD_DEVICE} (requires sudo access)..."
 /usr/bin/sudo /usr/bin/time /usr/sbin/diskutil unmountDisk ${SD_CARD_DEVICE}
 
 echo "  copying ${TMPDIR}/${IMAGE_VERSION} to ${SD_CARD_DEVICE} (requires sudo access)...\n    (press ctrl+t for progress report)"
