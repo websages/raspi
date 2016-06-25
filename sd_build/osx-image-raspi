@@ -32,9 +32,15 @@ function cleanup {
 }
 trap cleanup EXIT
 
-# fetch raspi image
-echo "Fetching raspbian image [${IMAGE_VERSION}] from ${IMAGE_USER}@${IMAGE_HOST} into ${TMPDIR}..."
-/usr/bin/time /usr/bin/scp ${IMAGE_USER}@${IMAGE_HOST}:/opt/images/raspbian/${IMAGE_VERSION} ${TMPDIR}/
+if [ ! -f "$HOME/lib/images/${IMAGE_VERSION}" ]; then
+  # fetch raspi image and cache it for when we're not physically at the bikeshed
+  echo "Fetching raspbian image [${IMAGE_VERSION}] from ${IMAGE_USER}@${IMAGE_HOST} into ${TMPDIR}..."
+  /usr/bin/time /usr/bin/scp ${IMAGE_USER}@${IMAGE_HOST}:/opt/images/raspbian/${IMAGE_VERSION} ${TMPDIR}/
+  [ ! -d "$HOME/lib/images/" ] && mkdir -p "$HOME/lib/images/"
+  cp "${TMPDIR}/${IMAGE_VERSION}" "$HOME/lib/images/"
+else
+  cp "$HOME/lib/images/${IMAGE_VERSION}" "${TMPDIR}"
+fi
 
 if [ ${IMAGE_VERSION: -3} == ".gz" ]
 then
